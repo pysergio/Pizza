@@ -9,6 +9,7 @@ int main(int argc, char const *argv[])
 
     ReadingPizzaFile PizzaFile(argv[1]);
     PizzaFile.getHeader();
+    PizzaFile.getMatrix();
 
     // RisingError RisingError;
     // RisingError.invalidPizza();
