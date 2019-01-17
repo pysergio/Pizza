@@ -1,12 +1,5 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <cmath>
-#include <cstring>
-#include <algorithm>
-#include <cstdlib>
 
-using namespace std;
+#include "sliceList.h"
 
 
 class Pizza{

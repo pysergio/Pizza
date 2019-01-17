@@ -102,32 +102,3 @@ void	ReadingPizzaFile::getMatrix() {
 		cout << endl;
 	}
 }
-
-
-
-// void PizzaFile::readFile(string path){
-// 	char    c;
-// 	file.open("input.in");
-// 	if (file.is_open()){
-// 		for (int i = 0; i < 4; i++){
-// 			file >> this->firstLine[i]; 
-// 		}
-// 		//Memory alloc
-// 		this->pizzaMatrix = new int*[this->firstLine[0]];
-// 		int i = -1;
-// 		while (++i < this->firstLine[0]){
-// 			this->pizzaMatrix = new int[this->firstLine[1]];
-// 		}
-// 		for (int i = 0; i <= this->firstLine[0]; i++){
-// 			for (int j = 0; j <= this->firstLine[1]; j++){
-// 				if (file >> c == 'T'){
-// 					this->pizzaMatrix[i][j] = 0;
-// 				} else if (file >> c == 'M') {
-// 					this->pizzaMatrix[i][j] = 1;
-// 				} else {
-// 					this->pizzaMatrix[i][j] = fille >> c;
-// 				}
-// 			}
-// 		}
-// 	}
-// }

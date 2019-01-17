@@ -13,5 +13,12 @@ int main(int argc, char const *argv[])
 
     // RisingError RisingError;
     // RisingError.invalidPizza();
+    SliceList<int> lst;
+
+    cout << "Before object created adr = " << lst.head << endl;
+    lst.push_back(5);
+
+    cout << "After object created adr = " << lst.head << endl;
+
     return 0;
 }
