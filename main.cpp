@@ -1,4 +1,5 @@
 #include "include/pizza.h"
+#define MACRO_VARIABLE_TO_STRING(Variable) (void(Variable),#Variable)
 
 int main(int argc, char const *argv[])
 {
@@ -13,12 +14,13 @@ int main(int argc, char const *argv[])
 
     // RisingError RisingError;
     // RisingError.invalidPizza();
-    SliceList<int> lst;
+    SliceList<string> lst;
 
-    cout << "Before object created adr = " << lst.head << endl;
-    lst.push_back(5);
+    // cout << "Before object created data = " << lst[0] << endl;
+    lst.push_back("str");
 
-    cout << "After object created adr = " << lst.head << endl;
+    cout << "After object created adr = " << lst[-1] << endl;
+    cout << "After object created adr = " << typeid(lst).name() << endl;
 
     return 0;
 }
