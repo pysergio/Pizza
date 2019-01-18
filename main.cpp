@@ -1,5 +1,4 @@
 #include "include/pizza.h"
-#define MACRO_VARIABLE_TO_STRING(Variable) (void(Variable),#Variable)
 
 int main(int argc, char const *argv[])
 {
@@ -20,6 +19,12 @@ int main(int argc, char const *argv[])
     lst.push_back("str");  // index = 0
     lst.push_back("str2"); // index = 1
     lst.push_back("str3"); // index = 2
+    lst.push_back("str4"); // index = 3
+    lst.push_back("str5"); // index = 4
+    lst.push_back("str6"); // index = 5
+
+    lst.insertAt(lst[5], 2);
+    lst.removeAt(5); // Remove "str5"
 
     cout << "Check list index operator " << lst[0] << endl;
     cout << "Check list index operator " << lst[1] << endl;
