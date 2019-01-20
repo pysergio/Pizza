@@ -1,4 +1,3 @@
-
 #include "sliceList.h"
 
 
@@ -12,6 +11,8 @@ public:
     int         max;
 // Pizza matrix
     int         **pizzaMatrix;
+// Slise list
+    SliceList<Slice> list;
 };
 
 class RisingError{
@@ -49,10 +50,23 @@ public:
 };
 
 class ReadingPizzaFile: public RisingError, public Pizza{
-public:
-    string      file;
-    ReadingPizzaFile(string fpath);
+    public:
+        string      file;
+        ReadingPizzaFile(string fpath);
 
     void    getHeader();
     void    getMatrix();
+    void    algorithm();
+    bool    validation(int x, int y);
+    void    backTrack(int x, int y, bool n);
+    bool   valid(int x, int y, int n, int divl);
+};
+
+class   Slice {
+    public:
+        int x;
+        int y;
+        int divx;
+        int divy;
+        int nbr;
 };

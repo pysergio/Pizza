@@ -12,8 +12,8 @@ public:
 
     void push_back(T data);
     void push_front(T data);
-    void pop_front();
-    void pop_back();
+    void del_front();
+    void del_back();
     void clear();
     void removeAt(int index);
     void insertAt(T data, int index);
@@ -96,7 +96,7 @@ void SliceList<T>::push_front(T data){
 }
 
 template<typename T>
-void SliceList<T>::pop_front(){
+void SliceList<T>::del_front(){
     if (head){
         Node *temp = head;
         head = head->pNext;
@@ -107,7 +107,7 @@ void SliceList<T>::pop_front(){
 }
 
 template<typename T>
-void SliceList<T>::pop_back(){
+void SliceList<T>::del_back(){
     if (!head){
         Node *current = head;
 
@@ -124,7 +124,7 @@ void SliceList<T>::pop_back(){
 template<typename T>
 void SliceList<T>::clear(){
     while (Size){
-        pop_front();
+        del_front();
     }
 }
 
@@ -147,10 +147,10 @@ void SliceList<T>::removeAt(int index){
         Size--;
     }
     else if (index == 0){
-        pop_front();
+        del_front();
     }
     else if (index == Size - 1){
-        pop_back();
+        del_back();
     } else {
         cout << "Invalid index. list[" << index << "]" << endl;
         exit(1);
@@ -180,10 +180,10 @@ void SliceList<T>::insertAt(T data, int index){
         Size++;
     }
     else if (index == 0){
-        pop_front();
+        del_front();
     }
     else if (index == Size - 1){
-        pop_back();
+        del_back();
     } else {
         cout << "Invalid index. list[" << index << "]" << endl;
         exit(1);

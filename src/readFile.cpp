@@ -63,12 +63,16 @@ void	ReadingPizzaFile::getMatrix() {
 	ifstream 	pizza(file);
 	string		line;
 	int			aux;
+	int			T;
+	int			M;
 
 	pizzaMatrix = new int*[row];
 	for (int i = 0; i < row; i++) {
 		pizzaMatrix[i] = new int[col];
 	}
 	cout << row << ' ' << col << endl;
+	T = 0;
+	M = 0;
 	if (pizza.is_open()) {
 		getline(pizza, line);
 		aux = 0;
@@ -80,8 +84,10 @@ void	ReadingPizzaFile::getMatrix() {
 				if (line[i] != 'T' && line[i] != 'M')
 					invalidIngredient();
 				else if (line[i] == 'T') {
+					T++;
 					pizzaMatrix[aux][i] = 1;
 				} else if (line[i] == 'M') {
+					M++;
 					pizzaMatrix[aux][i] = 0;
 				}
 			}
@@ -93,6 +99,12 @@ void	ReadingPizzaFile::getMatrix() {
 	} else {
 		notOpened();
 	}
+
+
+	if (row * col / T > max && row * col / M > max){
+		invalidIngredient();
+	}
+
 	cout << endl;
 	pizza.close();
 	for (int i = 0; i < row; i++) {
