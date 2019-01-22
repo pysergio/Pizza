@@ -55,8 +55,8 @@ void   ReadingPizzaFile::backTrack(int x, int y, bool n) {
                 n++;
                 divl = 0;
             }
-            if (n > max)
-                backTrack()
+			if (n > max)
+				backTrack(x, y, n);
         }
         list.push_back(slice);
     }
