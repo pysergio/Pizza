@@ -2,7 +2,7 @@
 
 
 class Pizza {
-	private:
+	protected:
 		// File
 		string  fpath;;
 		// Pizza matrix size
@@ -15,6 +15,7 @@ class Pizza {
 		int**	matrix;
 		// Shapes list
 		int**	divs;
+		int		dCount;
 
 		void    fileInit(string fpath);
 		void    readHeader();
@@ -25,6 +26,10 @@ class Pizza {
 		void    setY(int Y);
 		void    setMin(int min);
 		void    setMax(int max);
+		void	drawMask(int x, int y, int shapeId, int sliceId);
+		bool	getDeltas(int* dx, int* dy, int x, int y, int shapeId);
+		bool	getCurrentPoint(int* x, int* y);
+		bool	tryShape(int x, int y, int shapeId);
 
 	public:
 		int         **mask;
@@ -35,10 +40,12 @@ class Pizza {
 				int y;
 				int dx;
 				int dy;
-				int divId;
-				int itemId;
+				int shapeId;
+				int sliceId;
+
+				Slice(int x, int y, int dx, int dy, int shapeId, int sliceId);
 		};
-		List<Slice> list;
+		List<Slice*> list;
 
 		Pizza(string fpath);
 		int     getX();
@@ -47,10 +54,19 @@ class Pizza {
 		int     getMax();
 		int     **getMatrix();
 		int     **getDivs();
+		void	printHeader();
 		void	printMatrix();
 		void	printMask();
+		void	solveIt(int shapeId = 0, int sliceId = 1);
 };
-
+Pizza::Slice::Slice(int x, int y, int dx, int dy, int shapeId, int sliceId){
+	this->x = x;
+	this->y = y;
+	this->dx = dx;
+	this->dy = dy;
+	this->shapeId = shapeId;
+	this->sliceId = sliceId;
+}
 void	Pizza::setX(int X){
 	if (X < 1 || X > HEADER_MAX)
 		RisingError::invalidHeader();
@@ -110,7 +126,7 @@ void 	Pizza::setDivs(){
 	if (this->min && this->max){
 		int dc = 0;
 
-		if (this->min > this->max)
+		if (this->min * 2 > this->max)
 			RisingError::invalidMinMax();
 		for (int i = this->min; i <= max; i++)
 			for (int j = 1; j <= i; j++)
@@ -119,6 +135,7 @@ void 	Pizza::setDivs(){
 		this->divs = new int*[dc];
 		for (int i = 0; i < dc; i++)
 			this->divs[i] = new int[2];
+		this->dCount = dc;
 		dc = 0;
 		for (int i = this->min; i <= max; i++)
 			for (int j = 1; j <= i; j++)
@@ -129,6 +146,9 @@ void 	Pizza::setDivs(){
 				}
 	} else 
 		RisingError::undefinedMinOrMax();
+}
+void	Pizza::printHeader(){
+    cout << this->Y << ' ' << this->X << ' ' << this->min << ' ' << this->max << endl;
 }
 void	Pizza::printMatrix(){
 	for (int i = 0; i < this->Y; i++){
@@ -235,4 +255,79 @@ Pizza::Pizza(string fpath){
 	readMatrix();
 	setDivs();
 	setClearMask();
+}
+
+
+bool	Pizza::getCurrentPoint(int* x, int* y){
+	for (int i = 0; i < this->Y; i++)
+		for (int j = 0; j < this->X; j++)
+			if (!this->mask[i][j]){
+				*x = j;
+				*y = i;
+				return true;
+			}
+	return false;
+}
+bool	Pizza::getDeltas(int* dx, int* dy, int x, int y, int shapeId){
+	if (shapeId >= this->dCount)
+		return false;
+
+	*dx = this->divs[shapeId][0] + x;
+	*dy = this->divs[shapeId][1] + y;
+
+	if (*dx > this->X || *dy > this->Y)
+		return false;
+
+	return true;
+}
+void	Pizza::drawMask(int x, int y, int shapeId, int sliceId){
+	int		dx;
+	int		dy;
+	getDeltas(&dx, &dy, x, y, sliceId);
+		for (int i = y; i < dy; i++)
+			for (int j = x; j < dx; j++)
+				this->mask[i][j] = sliceId;
+}
+bool	Pizza::tryShape(int x, int y, int shapeId){
+	int		dx;
+	int		dy;
+	int		sum = 0;
+
+	if (getDeltas(&dx, &dy, x, y, shapeId))
+		for (int i = y; i < dy; i++)
+			for (int j = x; j < dx; j++){
+				if (this->mask[i][j])
+					return false;
+				if (this->matrix[i][j])
+					sum++;
+			}
+	else
+		return false;
+	if (this->max - sum < this->min || this->min < sum)
+		return false;
+	return true;
+}	
+void	Pizza::solveIt(int shapeId, int sliceId){
+	int 	x;
+	int		y;
+	int		dx;
+	int		dy;
+
+	if (!getCurrentPoint(&x, &y))
+		return;
+	cout << endl;
+	printMask();
+	while (shapeId < this->dCount){
+		if (tryShape(x, y, shapeId)){
+			getDeltas(&dx, &dy, x, y, sliceId);
+			drawMask(x, y, shapeId, sliceId);
+			Slice newSlice(x, y, dx, dy, shapeId, sliceId);
+			this->list.push_back(&newSlice);
+			solveIt(0, sliceId + 1);
+			return;
+		}
+		shapeId++;
+	}
+	return;
+	
 }
