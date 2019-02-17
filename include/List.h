@@ -51,7 +51,6 @@ T& List<T>::operator[](int index) {
 	else {
 		index = Size - index - 1;
 	}
-
 	if (index >= 0 && index < Size) {
 		for (int i = 0; i < index; i++) {
 			current = current->pPrev;
@@ -93,6 +92,7 @@ void List<T>::del_back() {
 		head = head->pPrev;
 		
 		temp->pPrev = nullptr;
+		delete temp->data;
 		delete temp;
 
 		Size--;

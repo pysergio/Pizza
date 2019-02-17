@@ -58,7 +58,7 @@ public:
 	void	printMatrix();
 	void	printMask();
 	void	printList();
-	void	solveIt(int sliceId);
+	void	solveIt();
 };
 Pizza::Slice::Slice() {
 	this->x = 0;
@@ -279,9 +279,9 @@ bool	Pizza::getCurrentPoint(int* x, int* y) {
 			if (!this->mask[i][j]) {
 				*x = j;
 				*y = i;
-				return false;
+				return true;
 			}
-	return true;
+	return false;
 }
 void	Pizza::drawMask(int x, int y, int dx, int dy, int sliceId) {
 	for (int i = y; i < dy; i++)
@@ -305,36 +305,60 @@ bool	Pizza::tryShape(int x, int y, int* dx, int* dy, int shapeId) {
 		return false;
 	return true;
 }
-void	Pizza::solveIt(int sliceId = 1) {
+void	Pizza::solveIt() {
 	Slice* sl = nullptr;
+	int sliceId = 1;
+	int success = this->X * this->Y; // 
+	int percentage = 0;
 
-	if (sliceId < this->list.getSize()) {
-		this->list.del_back();
-		sl = this->list[-1];
-		this->drawMask(sl->x, sl->y, sl->dx, sl->dy, 0);
-		sl->shapeId++;
-	} else if (sliceId > this->list.getSize()) {
-		sl = new Slice;
-		this->list.push_back(sl);
-		if (this->getCurrentPoint(&sl->x, &sl->y)) {
-			return;
+	while (sliceId) {
+		if (!(sliceId % 20)) {
+			int progress = success;
+			for (int i = 0; i < this->Y; i++) {
+				for (int j = 0; j < this->X; j++) {
+					if (!this->mask[i][j])
+						progress--;
+				}
+			}
+			if (percentage != (int)(((float)progress / (float)success) * 100)){
+				percentage = (int)(((float)progress / (float)success) * 100);
+				cout << percentage << "%" << endl;
+			}
 		}
-		sl->sliceId = sliceId;
-	} else if (sliceId == this->list.getSize()) {
-		sl = this->list[-1];
-		this->drawMask(sl->x, sl->y, sl->dx, sl->dy, 0);
-		sl->shapeId++;
-	} else if (sliceId == 0) {
-		RisingError::pizzaHasNoSolution();
-	}
-	while (sl->shapeId < this->getDivsC()) {
-		if (this->tryShape(sl->x, sl->y, &sl->dx, &sl->dy, sl->shapeId)) {
-			this->drawMask(sl->x, sl->y, sl->dx, sl->dy, sl->sliceId);
-			return this->solveIt(sliceId + 1);
+		// printMask();
+		if (sliceId < this->list.getSize()){
+			sl = this->list[-1];
+			delete sl;
+			this->list.del_back();
+			sl = this->list[-1];
+			sl->shapeId++;
+			drawMask(sl->x, sl->y, sl->dx, sl->dy, 0);	// Remove slice from mask when go back
 		}
-		sl->shapeId++;
+		else if (sliceId > this->list.getSize()) {
+			sl = new Slice();
+			sl->sliceId = sliceId;
+			sl->shapeId = 0;
+			if (!getCurrentPoint(&sl->x, &sl->y)) {
+				return;
+			}
+			this->list.push_back(sl);
+		}
+		else {
+			sl = this->list[-1];
+			sl->shapeId++;
+			drawMask(sl->x, sl->y, sl->dx, sl->dy, 0);	// Remove slice from mask when go back
+		}
+		while (sl->shapeId < this->dCount) {
+			if (tryShape(sl->x, sl->y, &sl->dx, &sl->dy, sl->shapeId)) {
+				drawMask(sl->x, sl->y, sl->dx, sl->dy, sl->sliceId);
+				sliceId++;
+				break;
+			}
+			sl->shapeId++;
+		}
+		if (sl->shapeId >= this->dCount)
+			sliceId--;
 	}
-	if (sl->shapeId == this->getDivsC()) {
-		return this->solveIt(sliceId - 1);
-	}
+
+	RisingError::pizzaHasNoSolution();
 }
