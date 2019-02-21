@@ -12,9 +12,10 @@ protected:
 	int		min;
 	int		max;
 	// Pizza matrix
-	int**	matrix;
+	int		**matrix;
+	int		**mask;
 	// Shapes list
-	int**	divs;
+	int		**divs;
 	int		dCount;
 
 	void    fileInit(string fpath);
@@ -31,7 +32,6 @@ protected:
 	bool	tryShape(int x, int y, int* dx, int* dy, int shapeId);
 
 public:
-	int         **mask;
 	// Slice list
 	class   Slice {
 	public:
@@ -40,17 +40,12 @@ public:
 		int dx;
 		int dy;
 		int shapeId;
-		int sliceId;
 
 		Slice();
 	};
 	List<Slice*> list;
 
 	Pizza(string fpath);
-	int     getX();
-	int     getY();
-	int     getMin();
-	int     getMax();
 	int     **getMatrix();
 	int     **getDivs();
 	int		getDivsC() { return this->dCount; }
@@ -58,7 +53,7 @@ public:
 	void	printMatrix();
 	void	printMask();
 	void	printList();
-	void	solveIt(int sliceId);
+	void	solveIt();
 };
 Pizza::Slice::Slice() {
 	this->x = 0;
@@ -66,7 +61,6 @@ Pizza::Slice::Slice() {
 	this->dx = 0;
 	this->dy = 0;
 	this->shapeId = 0;
-	this->sliceId = 0;
 }
 void	Pizza::setX(int X) {
 	if (X < 1 || X > HEADER_MAX)
@@ -74,17 +68,11 @@ void	Pizza::setX(int X) {
 	else
 		this->X = X;
 }
-int		Pizza::getX() {
-	return this->X;
-}
 void	Pizza::setY(int Y) {
 	if (Y < 1 || Y > HEADER_MAX)
 		RisingError::invalidHeader();
 	else
 		this->Y = Y;
-}
-int		Pizza::getY() {
-	return this->Y;
 }
 void	Pizza::setMin(int min) {
 	if (min < 1 || min > HEADER_MAX)
@@ -92,17 +80,11 @@ void	Pizza::setMin(int min) {
 	else
 		this->min = min;
 }
-int		Pizza::getMin() {
-	return this->min;
-}
 void	Pizza::setMax(int max) {
 	if (max < 1 || max > HEADER_MAX)
 		RisingError::invalidHeader();
 	else
 		this->max = max;
-}
-int		Pizza::getMax() {
-	return this->max;
 }
 int**	Pizza::getMatrix() {
 	return this->matrix;
@@ -138,14 +120,17 @@ void 	Pizza::setDivs() {
 		for (int i = 0; i < dc; i++)
 			this->divs[i] = new int[2];
 		this->dCount = dc;
-		dc = 0;
+		if (DIVS_ASCENDING)
+			dc = 0;
 		for (int i = this->min * 2; i <= max; i++)
 			for (int j = 1; j <= i; j++)
 				if (!(i % j)) {
-					// dc--;
+					if (!DIVS_ASCENDING)
+						dc--;
 					this->divs[dc][0] = j;
 					this->divs[dc][1] = i / j;
-					dc++;
+					if (DIVS_ASCENDING)
+						dc++;
 				}
 	}
 	else
@@ -171,13 +156,10 @@ void	Pizza::printMask() {
 	}
 }
 void	Pizza::printList() {
+	cout << this->list.getSize() << endl;
 	for (int i = 0; i < this->list.getSize(); i++) {
-		cout << " x=" << list[i]->x;
-		cout << " y=" << list[i]->y;
-		cout << " dx=" << list[i]->dx;
-		cout << " dy=" << list[i]->dy;
-		cout << " shapeId=" << list[i]->shapeId;
-		cout << " sliceId=" << list[i]->sliceId << endl;
+		cout << list[i]->y << ' ' << list[i]->x << ' ' << list[i]->dy - 1
+			<< ' ' << list[i]->dx - 1 << endl;
 	}
 }
 void    Pizza::fileInit(string fpath) {
@@ -305,36 +287,40 @@ bool	Pizza::tryShape(int x, int y, int* dx, int* dy, int shapeId) {
 		return false;
 	return true;
 }
-void	Pizza::solveIt(int sliceId = 1) {
+void	Pizza::solveIt() {
 	Slice* sl = nullptr;
+	int sliceId = 1;
+	while (sliceId) {
+		if (sliceId > this->list.getSize()) {
+			sl = new Slice;
+			if (this->getCurrentPoint(&sl->x, &sl->y)) {
+				delete sl;
+				return;
+			}
+			this->list.pushBack(sl);
+		}
+		else if (sliceId == this->list.getSize()) {
+			sl = this->list.getBack();
+			this->drawMask(sl->x, sl->y, sl->dx, sl->dy, 0);
+			sl->shapeId++;
+		}
+		else if (sliceId < this->list.getSize()) {
+			this->list.delBack();
+			sl = this->list.getBack();
+			this->drawMask(sl->x, sl->y, sl->dx, sl->dy, 0);
+			sl->shapeId++;
+		}
 
-	if (sliceId < this->list.getSize()) {
-		this->list.del_back();
-		sl = this->list[-1];
-		this->drawMask(sl->x, sl->y, sl->dx, sl->dy, 0);
-		sl->shapeId++;
-	} else if (sliceId > this->list.getSize()) {
-		sl = new Slice;
-		this->list.push_back(sl);
-		if (this->getCurrentPoint(&sl->x, &sl->y)) {
-			return;
+		while (sl->shapeId < this->getDivsC()) {
+			if (this->tryShape(sl->x, sl->y, &sl->dx, &sl->dy, sl->shapeId)) {
+				this->drawMask(sl->x, sl->y, sl->dx, sl->dy, sliceId);
+				sliceId++;
+				break;
+			}
+			sl->shapeId++;
 		}
-		sl->sliceId = sliceId;
-	} else if (sliceId == this->list.getSize()) {
-		sl = this->list[-1];
-		this->drawMask(sl->x, sl->y, sl->dx, sl->dy, 0);
-		sl->shapeId++;
-	} else if (sliceId == 0) {
-		RisingError::pizzaHasNoSolution();
+		if (sl->shapeId == this->getDivsC())
+			sliceId--;
 	}
-	while (sl->shapeId < this->getDivsC()) {
-		if (this->tryShape(sl->x, sl->y, &sl->dx, &sl->dy, sl->shapeId)) {
-			this->drawMask(sl->x, sl->y, sl->dx, sl->dy, sl->sliceId);
-			return this->solveIt(sliceId + 1);
-		}
-		sl->shapeId++;
-	}
-	if (sl->shapeId == this->getDivsC()) {
-		return this->solveIt(sliceId - 1);
-	}
+	RisingError::pizzaHasNoSolution();
 }
