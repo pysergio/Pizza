@@ -2,9 +2,11 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <iomanip>
 using namespace std;
 
 #define FILE_FORMAT ".in"
+#define FILE_FORMAT_LEN 3
 #define HEADER_MAX  1000   // Header validator limit
 #define INGR1 'T'   // Ingredient assignment
 #define INGR2 'M'   // Ingredient assignment
@@ -53,7 +55,13 @@ public:
 		exit(1);
 	}
 	static void pizzaHasNoSolution() {
-		cout << "Given Pizza has no solution !!!\nMake another Pizza;)" << endl;
+		cout << "Given Pizza has no solution without \"free_spaces_allowed\"!!!"
+		<< "\nMake another Pizza;) or use key \"-fsa true\"" << endl;
+		exit(1);
+	}
+	static void argvError() {
+		cout << "<optional \"-fsna\" - free spaces not allowed, \"-pmask\" for printing mask>"
+		<< " <pizza input file *in>" << endl;
 		exit(1);
 	}
 };

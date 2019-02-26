@@ -17,6 +17,7 @@ protected:
 	// Shapes list
 	int		**divs;
 	int		dCount;
+	int		free_spaces_counter;
 
 	void    fileInit(string fpath);
 	void    readHeader();
@@ -48,12 +49,13 @@ public:
 	Pizza(string fpath);
 	int     **getMatrix();
 	int     **getDivs();
-	int		getDivsC() { return this->dCount; }
+	int		getShapesC() { return this->dCount; }
 	void	printHeader();
 	void	printMatrix();
 	void	printMask();
 	void	printList();
-	void	solveIt();
+	void	printFSC();
+	void	solveIt(bool free_spaces_allowed);
 };
 Pizza::Slice::Slice() {
 	this->x = 0;
@@ -148,12 +150,22 @@ void	Pizza::printMatrix() {
 	}
 }
 void	Pizza::printMask() {
+	int	fill = 1;
+	int aux = 1;
+	while (this->list.getSize() / (aux *= 10))
+		fill++;
 	for (int i = 0; i < this->Y; i++) {
 		cout << "[ ";
 		for (int j = 0; j < this->X; j++)
-			cout << this->mask[i][j] << ' ';
+			if (this->mask[i][j] >= 0)
+				cout << setfill('0') << setw(fill) << this->mask[i][j] << ' ';
+			else if (this->mask[i][j] < 0)
+				cout << setfill('-') << setw(fill) << this->mask[i][j] << ' ';
 		cout << ']' << endl;
 	}
+}
+void	Pizza::printFSC() {
+		cout << "Free spaces = " << this->free_spaces_counter << endl;
 }
 void	Pizza::printList() {
 	cout << this->list.getSize() << endl;
@@ -163,7 +175,7 @@ void	Pizza::printList() {
 	}
 }
 void    Pizza::fileInit(string fpath) {
-	if (fpath.substr(fpath.length() - 3) == FILE_FORMAT) {
+	if (fpath.substr(fpath.length() - FILE_FORMAT_LEN) == FILE_FORMAT) {
 		this->fpath = fpath;
 	}
 	else {
@@ -254,16 +266,18 @@ Pizza::Pizza(string fpath) {
 	readMatrix();
 	setDivs();
 	setClearMask();
+	free_spaces_counter = 0;
 }
 bool	Pizza::getCurrentPoint(int* x, int* y) {
+	//Set current possition using (int* x, int* y) and return false if mask was filled(pizza was solved)
 	for (int i = 0; i < this->Y; i++)
 		for (int j = 0; j < this->X; j++)
 			if (!this->mask[i][j]) {
 				*x = j;
 				*y = i;
-				return false;
+				return true;
 			}
-	return true;
+	return false;
 }
 void	Pizza::drawMask(int x, int y, int dx, int dy, int sliceId) {
 	for (int i = y; i < dy; i++)
@@ -271,6 +285,7 @@ void	Pizza::drawMask(int x, int y, int dx, int dy, int sliceId) {
 			this->mask[i][j] = sliceId;
 }
 bool	Pizza::tryShape(int x, int y, int* dx, int* dy, int shapeId) {
+	//Try if shape => divs[shapeId] can be applied
 	int		sum = 0;
 	*dx = this->divs[shapeId][0] + x;
 	*dy = this->divs[shapeId][1] + y;
@@ -287,40 +302,71 @@ bool	Pizza::tryShape(int x, int y, int* dx, int* dy, int shapeId) {
 		return false;
 	return true;
 }
-void	Pizza::solveIt() {
+void	Pizza::solveIt(bool free_spaces_allowed = true) {
 	Slice* sl = nullptr;
 	int sliceId = 1;
-	while (sliceId) {
-		if (sliceId > this->list.getSize()) {
+	if (free_spaces_allowed){
+		int x = 0;
+		int y = 0;
+		while (this->getCurrentPoint(&x, &y)) {
 			sl = new Slice;
-			if (this->getCurrentPoint(&sl->x, &sl->y)) {
-				delete sl;
-				return;
-			}
 			this->list.pushBack(sl);
-		}
-		else if (sliceId == this->list.getSize()) {
-			sl = this->list.getBack();
-			this->drawMask(sl->x, sl->y, sl->dx, sl->dy, 0);
-			sl->shapeId++;
-		}
-		else if (sliceId < this->list.getSize()) {
-			this->list.delBack();
-			sl = this->list.getBack();
-			this->drawMask(sl->x, sl->y, sl->dx, sl->dy, 0);
-			sl->shapeId++;
-		}
-
-		while (sl->shapeId < this->getDivsC()) {
-			if (this->tryShape(sl->x, sl->y, &sl->dx, &sl->dy, sl->shapeId)) {
-				this->drawMask(sl->x, sl->y, sl->dx, sl->dy, sliceId);
-				sliceId++;
-				break;
+			sl->x = x;
+			sl->y = y;
+			// Try to apply shape 
+			while (sl->shapeId < this->getShapesC()) {
+				if (this->tryShape(sl->x, sl->y, &sl->dx, &sl->dy, sl->shapeId)) {
+					this->drawMask(sl->x, sl->y, sl->dx, sl->dy, sliceId);
+					sliceId++;
+					break;
+				}
+				sl->shapeId++;
 			}
-			sl->shapeId++;
+			// Skip this point if can't apply any shape
+			if (sl->shapeId == this->getShapesC()) {
+				if (this->matrix[sl->y][sl->x])
+					this->mask[sl->y][sl->x] = -1;
+				else
+					this->mask[sl->y][sl->x] = -2;
+				this->list.delBack();
+				this->free_spaces_counter++;
+			}
 		}
-		if (sl->shapeId == this->getDivsC())
-			sliceId--;
+	} else {
+		// Backtrack algorithm
+		while (sliceId) {
+			if (sliceId > this->list.getSize()) {
+				sl = new Slice;
+				if (!this->getCurrentPoint(&sl->x, &sl->y)) {
+					delete sl;
+					return;
+				}
+				this->list.pushBack(sl);
+			}
+			else if (sliceId == this->list.getSize()) {
+				sl = this->list.getBack();
+				this->drawMask(sl->x, sl->y, sl->dx, sl->dy, 0);
+				sl->shapeId++;
+			}
+			else if (sliceId < this->list.getSize()) {
+				this->list.delBack();
+				sl = this->list.getBack();
+				this->drawMask(sl->x, sl->y, sl->dx, sl->dy, 0);
+				sl->shapeId++;
+			}
+			// Try to apply shape 
+			while (sl->shapeId < this->getShapesC()) {
+				if (this->tryShape(sl->x, sl->y, &sl->dx, &sl->dy, sl->shapeId)) {
+					this->drawMask(sl->x, sl->y, sl->dx, sl->dy, sliceId);
+					sliceId++;
+					break;
+				}
+				sl->shapeId++;
+			}
+			// Return back to apply another shape if can't apply any shape at this steep
+			if (sl->shapeId == this->getShapesC())
+				sliceId--;
+		}
+		RisingError::pizzaHasNoSolution();
 	}
-	RisingError::pizzaHasNoSolution();
 }
